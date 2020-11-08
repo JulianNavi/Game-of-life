@@ -1,8 +1,8 @@
 import React, {useState, useCallback, useRef} from 'react';
 import produce from 'immer';
 
-const numRows = 30;
-const numCols = 30;
+const numRows = 50;
+const numCols = 50;
 
 const operations = [
   [0, 1],
@@ -15,13 +15,18 @@ const operations = [
   [-1, 0],
 ];
 
+const generateEmptyGrid = () => {
+  const rows = [];
+  for (let i = 0; i < numRows; i++) {
+    rows.push(Array.from(Array(numCols), () => 0));
+  }
+
+  return rows;
+};
+
 const App: React.FC = () => {
   const [grid, setGrid] = useState(() => {
-    const rows = [];
-    for (let i = 0; i < numRows; i++) {
-      rows.push(Array.from(Array(numCols), () => 0));
-    }
-    return rows;
+    return generateEmptyGrid();
   });
 
   const [running, setRunning] = useState(false);
@@ -33,6 +38,7 @@ const App: React.FC = () => {
     if (!runningRef.current) {
       return;
     }
+
     setGrid(g => {
       return produce(g, gridCopy => {
         for (let i = 0; i < numRows; i++) {
@@ -45,6 +51,7 @@ const App: React.FC = () => {
                 neighbors += g[newI][newK];
               }
             });
+
             if (neighbors < 2 || neighbors > 3) {
               gridCopy[i][k] = 0;
             } else if (g[i][k] === 0 && neighbors === 3) {
@@ -54,7 +61,8 @@ const App: React.FC = () => {
         }
       });
     });
-    setTimeout(runSimulation, 1000);
+
+    setTimeout(runSimulation, 100);
   }, []);
 
   return (
@@ -62,9 +70,32 @@ const App: React.FC = () => {
       <button
         onClick={() => {
           setRunning(!running);
+          if (!running) {
+            runningRef.current = true;
+            runSimulation();
+          }
         }}
       >
         {running ? 'stop' : 'start'}
+      </button>
+      <button
+        onClick={() => {
+          const rows = [];
+          for (let i = 0; i < numRows; i++) {
+            rows.push(Array.from(Array(numCols), () => (Math.random() > 0.7 ? 1 : 0)));
+          }
+
+          setGrid(rows);
+        }}
+      >
+        random
+      </button>
+      <button
+        onClick={() => {
+          setGrid(generateEmptyGrid());
+        }}
+      >
+        clear
       </button>
       <div
         style={{
